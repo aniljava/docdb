@@ -25,7 +25,11 @@ public class DocDB implements DB {
 	}
 
 	public DocDB(KV db) {
-		this.kv = db;
+		setKV(db);
+	}
+	
+	public void setKV(KV kv){
+		this.kv = kv;
 		loadSchema();
 	}
 
