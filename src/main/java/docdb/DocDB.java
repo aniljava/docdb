@@ -20,6 +20,9 @@ public class DocDB implements DB {
 	public KV kv() {
 		return kv;
 	}
+	
+	public DocDB() {	
+	}
 
 	public DocDB(KV db) {
 		this.kv = db;
