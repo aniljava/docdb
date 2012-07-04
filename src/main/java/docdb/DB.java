@@ -1,8 +1,9 @@
 package docdb;
 
+import java.io.Closeable;
 import java.util.Collection;
 
-public interface DB {
+public interface DB extends Closeable{
 
 	/** Underlying KV Store **/
 	public KV kv();
