@@ -14,6 +14,7 @@ public interface DB extends Closeable{
 	public Object save(String bucket, Object key, Object data);
 	public void delete(String bucket, Object key);
 	public void updateBucketFields(String bucket, String... fields);
+	public Collection<String> getFieldNames(String bucket);
 	
 	/** Index or Set**/	
 	public void ensureIndex(String bucket, String... fields);

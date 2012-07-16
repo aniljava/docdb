@@ -20,15 +20,14 @@ public class DocDB implements DB {
 	public KV kv() {
 		return kv;
 	}
-	
-	public DocDB() {	
-	}
+
+	public DocDB() {}
 
 	public DocDB(KV db) {
 		setKV(db);
 	}
-	
-	public void setKV(KV kv){
+
+	public void setKV(KV kv) {
 		this.kv = kv;
 		loadSchema();
 	}
@@ -45,8 +44,7 @@ public class DocDB implements DB {
 	private Map<String, Map<String, Map<String, Map<String, Object>>>>	schema	= new HashMap<String, Map<String, Map<String, Map<String, Object>>>>();
 
 	public long counter(String name) {
-		if (name == null)
-			name = "__default";
+		if (name == null) name = "__default";
 		long current = longOrElse(kv.get(s2a("counter:" + name)), 0);
 		kv.set(s2a("counter:" + name), s2a("" + (current + 1)));
 		return current;
@@ -61,8 +59,7 @@ public class DocDB implements DB {
 	}
 
 	public long peekConter(String name) {
-		if (name == null)
-			name = "__default";
+		if (name == null) name = "__default";
 		long current = longOrElse(kv.get(s2a("counter:" + name)), 0);
 		return current;
 	}
@@ -86,13 +83,11 @@ public class DocDB implements DB {
 			}
 
 			public boolean hasNext() {
-				if (current < listStart || current > listStart + listSize)
-					return false;
+				if (current < listStart || current > listStart + listSize) return false;
 
 				next = getFromList(listName, current);
 				current = current + 1;
-				if (next == null)
-					return hasNext();
+				if (next == null) return hasNext();
 				else
 					return true;
 			}
@@ -110,8 +105,7 @@ public class DocDB implements DB {
 	}
 
 	public void prepend(final String listName, final Object... data) {
-		if (data == null || data.length == 0)
-			return;
+		if (data == null || data.length == 0) return;
 
 		if (data.length == 1) {
 			final long size = getListSize(listName);
@@ -133,8 +127,7 @@ public class DocDB implements DB {
 	}
 
 	public void append(String listName, Object... data) {
-		if (data == null || data.length == 0)
-			return;
+		if (data == null || data.length == 0) return;
 		if (data.length == 1) {
 			final long size = getListSize(listName);
 			final long start = getListStartIndex(listName);
@@ -215,17 +208,12 @@ public class DocDB implements DB {
 			return;
 		}
 
-		if (data == null)
-			return;
+		if (data == null) return;
 
-		if (!schema.containsKey("buckets")) {
-			return;
-		}
+		if (!schema.containsKey("buckets")) { return; }
 
 		final Map<String, Map<String, Map<String, Object>>> buckets = schema.get("buckets");
-		if (!buckets.containsKey(bucket)) {
-			return;
-		}
+		if (!buckets.containsKey(bucket)) { return; }
 		final Map<String, Map<String, Object>> bucketMap = buckets.get(bucket);
 
 		final Set<String> attributes = new HashSet<String>();
@@ -244,20 +232,15 @@ public class DocDB implements DB {
 	}
 
 	private void updateIndex(String bucket, Object key, Object data) {
-		if (!(data instanceof Map))
-			return;
+		if (!(data instanceof Map)) return;
 
 		@SuppressWarnings("rawtypes")
 		Map map = (Map) data;
 
-		if (!schema.containsKey("buckets")) {
-			return;
-		}
+		if (!schema.containsKey("buckets")) { return; }
 
 		final Map<String, Map<String, Map<String, Object>>> buckets = schema.get("buckets");
-		if (!buckets.containsKey(bucket)) {
-			return;
-		}
+		if (!buckets.containsKey(bucket)) { return; }
 
 		final Map<String, Map<String, Object>> bucketMap = buckets.get(bucket);
 
@@ -279,15 +262,13 @@ public class DocDB implements DB {
 	}
 
 	public void index(String term, Object... value) {
-		if (value == null || value.length == 0)
-			return;
+		if (value == null || value.length == 0) return;
 
 		if (value.length == 1) {
 			String docid = value[0].toString();
 
 			// Return if exists.
-			if (kv.get(s2a(term + docid)) != null)
-				return;
+			if (kv.get(s2a(term + docid)) != null) return;
 
 			final long size = longOrElse(kv.get(s2a(term + "_")), 0);
 			if (size == 0) {
@@ -309,14 +290,12 @@ public class DocDB implements DB {
 	}
 
 	public void unIndex(String term, Object... value) {
-		if (value == null || value.length == 0)
-			return;
+		if (value == null || value.length == 0) return;
 
 		if (value.length == 1) {
 			String docid = value[0].toString();
 			long value_index = longOrElse(kv.get(s2a(term + docid)), -1);
-			if (value_index == -1)
-				return; // Does Not Exist
+			if (value_index == -1) return; // Does Not Exist
 
 			long size = longOrElse(kv.get(s2a(term + "_")), 0);
 
@@ -362,33 +341,25 @@ public class DocDB implements DB {
 	}
 
 	public <U> U get(String bucket, Class<U> valueType, Object... criteria) {
-		if (criteria == null) {
-			return null;
-		}
+		if (criteria == null) { return null; }
 
 		if (criteria.length == 1) {
 			final byte[] key = s2a(bucket + criteria[0].toString());
 			final byte[] json = kv.get(key);
 
-			if (json == null)
-				return null;
+			if (json == null) return null;
 			return decode(json, valueType);
 		}
 
-		if (criteria.length % 2 != 0) {
-			throw new RuntimeException("Expected Name Value pairs, got " + criteria.length);
-		}
+		if (criteria.length % 2 != 0) { throw new RuntimeException("Expected Name Value pairs, got " + criteria.length); }
 
 		Collection<U> collection = list(bucket, valueType, criteria);
-		if (collection.iterator().hasNext()) {
-			return collection.iterator().next();
-		}
+		if (collection.iterator().hasNext()) { return collection.iterator().next(); }
 		return null;
 	}
 
 	public Collection<String> listIndexValues(final String... keys) {
-		if (keys == null || keys.length == 0)
-			return null;
+		if (keys == null || keys.length == 0) return null;
 
 		class IndexIterator extends AbstractCollection<String> implements Iterator<String> {
 
@@ -423,9 +394,7 @@ public class DocDB implements DB {
 			}
 		}
 
-		if (keys.length == 1) {
-			return new IndexIterator(keys[0]);
-		}
+		if (keys.length == 1) { return new IndexIterator(keys[0]); }
 
 		class IndexIntersection extends AbstractCollection<String> implements Iterator<String> {
 
@@ -439,8 +408,7 @@ public class DocDB implements DB {
 				Collection<String> head = null;
 				for (String key : keys) {
 					Collection<String> next = listIndexValues(key);
-					if (head == null)
-						head = next;
+					if (head == null) head = next;
 
 					if (next.size() < head.size()) {
 						head = next;
@@ -497,8 +465,7 @@ public class DocDB implements DB {
 	}
 
 	private long longOrElse(Object obj, long els) {
-		if (obj == null)
-			return els;
+		if (obj == null) return els;
 		try {
 			if (obj instanceof byte[]) {
 				return Long.parseLong(a2s((byte[]) obj));
@@ -586,6 +553,21 @@ public class DocDB implements DB {
 		}
 	}
 
+	/**
+	 * Returns collection of all the field names in given bucket. If the bucket
+	 * does not exist or is empty, an empty set is returned.
+	 */
+	public Collection<String> getFieldNames(String bucketName) {
+
+		if (!schema.containsKey("buckets")) return new HashSet<String>(0);
+
+		final Map<String, Map<String, Map<String, Object>>> buckets = schema.get("buckets");
+		if (!buckets.containsKey(bucketName)) return new HashSet<String>(0);
+
+		final Map<String, Map<String, Object>> bucket = buckets.get(bucketName);
+		return bucket.keySet();
+	}
+
 	public void ensureIndex(String bucket, String... fields) {
 		boolean changed = false;
 
@@ -613,7 +595,7 @@ public class DocDB implements DB {
 				final boolean isIndexed = new Boolean(keyMap.get("index").toString());
 				if (!isIndexed) {
 					changed = true;
-					keyMap.put("indexed", true);
+					keyMap.put("index", true);
 				}
 			}
 		}
@@ -626,10 +608,8 @@ public class DocDB implements DB {
 	}
 
 	public void unEnsureIndex(String bucket, String... fields) {
-		if (!schema.containsKey("buckets"))
-			return;
-		if (!schema.get("buckets").containsKey(bucket))
-			return;
+		if (!schema.containsKey("buckets")) return;
+		if (!schema.get("buckets").containsKey(bucket)) return;
 
 		Map<String, Map<String, Object>> bucketMap = schema.get("buckets").get(bucket);
 		boolean changed = false;
@@ -656,8 +636,7 @@ public class DocDB implements DB {
 
 	private String a2s(byte[] a) {
 		/** Converts Array to String **/
-		if (a == null)
-			return null;
+		if (a == null) return null;
 		try {
 			return new String(a, "UTF-8");
 		} catch (UnsupportedEncodingException ex) {
@@ -666,8 +645,7 @@ public class DocDB implements DB {
 	}
 
 	private byte[] s2a(String s) {
-		if (s == null)
-			return null;
+		if (s == null) return null;
 		try {
 			return s.getBytes("UTF-8");
 		} catch (UnsupportedEncodingException ex) {
@@ -678,8 +656,7 @@ public class DocDB implements DB {
 	final static ObjectMapper	mapper	= new ObjectMapper();
 
 	public static <T> T decode(byte[] array, Class<T> valueType) {
-		if (array == null)
-			return null;
+		if (array == null) return null;
 		try {
 			return mapper.readValue(array, valueType);
 		} catch (Exception ex) {
