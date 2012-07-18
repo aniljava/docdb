@@ -28,7 +28,9 @@ public interface DB extends Closeable{
 	
 	/** List **/
 	public void prepend(String listName, Object... data);
-	public void append(String listName, Object... data);
+	public void append(String listName, Object... data);	
+	public void prependToLists(Object data, String... lists);
+	public void appendToLists(Object data, String... lists);	
 	public long getListSize(String listName);
 	public long getListStartIndex(String listName);
 	public void removeFromList(String listName, long index);

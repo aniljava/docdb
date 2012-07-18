@@ -145,6 +145,19 @@ public class DocDB implements DB {
 
 		}
 	}
+	
+	public void appendToLists(Object data, String... lists) {
+		for (String list : lists) {
+			append(list,data);
+		}		
+	}
+	
+	public void prependToLists(Object data, String... lists) {
+		for (String list : lists) {
+			prepend(list, data);
+		}		
+	}
+	
 
 	public String getFromList(String listName, long index) {
 		return a2s(kv.get(s2a(listName + index)));
