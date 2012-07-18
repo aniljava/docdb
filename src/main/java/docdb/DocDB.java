@@ -260,6 +260,25 @@ public class DocDB implements DB {
 			}
 		}
 	}
+	
+	
+	public boolean isIndexed(String term, String docid) {
+		byte[] data = kv.get(s2a(term + docid));
+		return data != null;
+	}
+	
+	public void addToIndices(Object value, String... terms) {
+		for (String term : terms) {
+			index(term, value);
+		}
+	}
+
+	public void removeFromIndices(Object value, String... terms) {
+		for (String term : terms) {
+			unIndex(term, value);
+		}
+
+	}
 
 	public void index(String term, Object... value) {
 		if (value == null || value.length == 0) return;

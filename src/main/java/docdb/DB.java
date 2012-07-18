@@ -22,6 +22,9 @@ public interface DB extends Closeable{
 	public Collection<String> listIndexValues(String... key);
 	public void index(String term, Object... value);
 	public void unIndex(String term, Object... value);
+	public boolean isIndexed(String term, String docid);
+	public void addToIndices(Object value, String... terms);
+	public void removeFromIndices(Object value, String... terms);
 	
 	/** List **/
 	public void prepend(String listName, Object... data);
