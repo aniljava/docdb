@@ -43,6 +43,40 @@ public class DocDB implements DB {
 
 	private Map<String, Map<String, Map<String, Map<String, Object>>>>	schema	= new HashMap<String, Map<String, Map<String, Map<String, Object>>>>();
 
+	/** General KV Shorthands **/
+	public String get(Object key) {
+		if (key == null) return null;
+		if (key instanceof byte[]) {
+			return a2s(kv.get((byte[]) key));
+		} else {
+			return get(s2a(key.toString()));
+		}
+	};
+	
+	public <U> U get(Object key, Class<U> valyeType) {
+		if(key == null)return null;		
+		final byte[] bkey = (key instanceof byte[])? (byte[])key : s2a(key.toString());
+		final byte[] value = kv.get(bkey);
+		if(value == null)return null;
+		
+		return decode(value,valyeType);
+	}
+	
+	public void remove(Object key) {
+		final byte[] bkey = (key instanceof byte[])? (byte[])key : s2a(key.toString());
+		kv.remove(bkey);
+	}
+	
+	public void set(Object key, Object value) {
+		final byte[] bkey = (key instanceof byte[])? (byte[])key : s2a(key.toString());
+		final byte[] bvalue = encode(value);		
+		kv.set(bkey, bvalue);
+	}
+	
+	
+	
+	
+	
 	public long counter(String name) {
 		if (name == null) name = "__default";
 		long current = longOrElse(kv.get(s2a("counter:" + name)), 0);

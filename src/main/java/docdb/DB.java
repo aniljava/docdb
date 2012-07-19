@@ -7,6 +7,15 @@ public interface DB extends Closeable{
 
 	/** Underlying KV Store **/
 	public KV kv();
+	
+	/** General KV Shorthands **/
+	public String get(Object key);
+	public <U> U get(Object key, Class<U> valyeType);
+	public void set(Object key, Object value);
+	public void remove(Object key);
+	
+	
+	
 
 	/** Document **/
 	public <U> U get(String bucket, Class<U> valueType, Object... criteria);
