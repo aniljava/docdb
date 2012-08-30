@@ -44,34 +44,29 @@ public class DocDB implements DB {
 	private Map<String, Map<String, Map<String, Map<String, Object>>>>	schema	= new HashMap<String, Map<String, Map<String, Map<String, Object>>>>();
 
 	/** General KV Shorthands **/
-	public String get(Object key) {
+	public String get(String key) {
 		if (key == null) return null;
-		if (key instanceof byte[]) {
-			return a2s(kv.get((byte[]) key));
-		} else {
-			return get(s2a(key.toString()));
-		}
+		return a2s(kv.get(s2a(key)));
 	};
+
 	
-	public <U> U get(Object key, Class<U> valyeType) {
-		if(key == null)return null;		
-		final byte[] bkey = (key instanceof byte[])? (byte[])key : s2a(key.toString());
-		final byte[] value = kv.get(bkey);
-		if(value == null)return null;
-		
-		return decode(value,valyeType);
+	public void remove(String key) {		
+		kv.remove(s2a(key));
 	}
 	
-	public void remove(Object key) {
-		final byte[] bkey = (key instanceof byte[])? (byte[])key : s2a(key.toString());
-		kv.remove(bkey);
-	}
-	
-	public void set(Object key, Object value) {
-		final byte[] bkey = (key instanceof byte[])? (byte[])key : s2a(key.toString());
-		final byte[] bvalue = encode(value);		
+	public void set(String key, String value) {
+		final byte[] bkey = s2a(key);
+		final byte[] bvalue = s2a(value);		
 		kv.set(bkey, bvalue);
 	}
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	
 	
@@ -272,8 +267,8 @@ public class DocDB implements DB {
 				String term = bucket + attribute + data.get(attribute);
 				String docid = key.toString();
 
+				
 				unIndex(term, docid);
-
 			}
 		}
 	}
@@ -328,25 +323,26 @@ public class DocDB implements DB {
 	}
 
 	public void index(String term, Object... value) {
+		
 		if (value == null || value.length == 0) return;
 
 		if (value.length == 1) {
 			String docid = value[0].toString();
-
+			
 			// Return if exists.
-			if (kv.get(s2a(term + docid)) != null) return;
-
+			if (kv.get(s2a("i" + term + docid)) != null) return;
+			
 			final long size = longOrElse(kv.get(s2a(term + "_")), 0);
 			if (size == 0) {
 				kv.set(s2a(term + "_"), s2a("1"));
-				kv.set(s2a(term + "0"), s2a(docid));
-				kv.set(s2a(term + docid), s2a("0")); // reverse index
+				kv.set(s2a("v" + term + "0"), s2a(docid));
+				kv.set(s2a("i" + term + docid), s2a("0")); // reverse index
 			} else {
 
 				long incr_size = size + 1;
 				kv.set(s2a(term + "_"), s2a(incr_size + ""));
-				kv.set(s2a(term + size), s2a(docid));
-				kv.set(s2a(term + docid), s2a(size + "")); // reverse index
+				kv.set(s2a("v" + term + size), s2a(docid));
+				kv.set(s2a("i" + term + docid), s2a(size + "")); // reverse index
 			}
 		} else {
 			for (Object v : value) {
@@ -360,43 +356,45 @@ public class DocDB implements DB {
 
 		if (value.length == 1) {
 			String docid = value[0].toString();
-			long value_index = longOrElse(kv.get(s2a(term + docid)), -1);
+						
+			long value_index = longOrElse(kv.get(s2a("i" + term + docid)), -1);
 			if (value_index == -1) return; // Does Not Exist
 
 			long size = longOrElse(kv.get(s2a(term + "_")), 0);
+			
 
 			if (size == 1) {
+				
 				// REMOVE ENTIRE THING
 				kv.remove(s2a(term + "_"));
-				kv.remove(s2a(term + value_index));
-				kv.remove(s2a(term + docid));
+				kv.remove(s2a("v" + term + value_index));
+				kv.remove(s2a("i" + term + docid));
 				return;
 			}
 
 			kv.set(s2a(term + "_"), s2a((size - 1) + ""));
-
-			if (value_index == (size - 1)) {
+			
+			if (value_index == (size - 1)) {				
 				// LAST ELEMENT, ONLY REMOVE NO SWAP
-				kv.remove(s2a(term + value_index));
-				kv.remove(s2a(term + docid)); // reverse index
-			} else {
-
+				kv.remove(s2a("v" + term + value_index));
+				kv.remove(s2a("i" + term + docid)); // reverse index
+			} else {				
 				// ANY MIDDLE ELEMENT
 				// Create a copy of last element and its index.
 				// Remove last element (element value at its index, element
 				// index at its value)
 				// insert last element
 
-				byte[] last_element_value = kv.get(s2a(term + (size - 1)));
-
+				byte[] last_element_value = kv.get(s2a("v" + term + (size - 1)));
+				
 				// DELETE LAST ELEMENT's VALUE
 
-				kv.remove(s2a(term + (size - 1))); // DELETE LAST VALUE index
-				kv.remove(s2a(term + a2s(last_element_value))); // Last value
-				kv.remove(s2a(term + docid)); // Last value
+				kv.remove(s2a("v" + term + (size - 1))); // DELETE LAST VALUE index
+				kv.remove(s2a("i" + term + a2s(last_element_value))); // Last value
+				kv.remove(s2a("i" + term + docid)); // Last value
 
-				kv.set(s2a(term + a2s(last_element_value)), s2a(value_index + ""));
-				kv.set(s2a(term + value_index), last_element_value);
+				kv.set(s2a("i" + term + a2s(last_element_value)), s2a(value_index + ""));
+				kv.set(s2a("v" + term + value_index), last_element_value);
 
 			}
 		} else {
@@ -452,7 +450,7 @@ public class DocDB implements DB {
 
 			public String next() {
 				index = index + 1;
-				return a2s(kv.get(s2a(term + (index - 1))));
+				return a2s(kv.get(s2a("v" + term + (index - 1))));
 			}
 
 			public void remove() {
@@ -491,7 +489,7 @@ public class DocDB implements DB {
 
 					for (String term : terms) {
 						if (result) {
-							byte[] value = kv.get(s2a(term + docid));
+							byte[] value = kv.get(s2a("i" + term + docid));
 							if (value == null) {
 								result = false;
 							}
@@ -623,7 +621,9 @@ public class DocDB implements DB {
 	 * Returns collection of all the field names in given bucket. If the bucket
 	 * does not exist or is empty, an empty set is returned.
 	 */
-	public Collection<String> getFieldNames(String bucketName) {
+	public Collection<String> getFieldNames(String bucketName){
+		
+		
 
 		if (!schema.containsKey("buckets")) return new HashSet<String>(0);
 

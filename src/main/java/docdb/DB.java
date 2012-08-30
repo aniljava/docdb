@@ -9,10 +9,9 @@ public interface DB extends Closeable{
 	public KV kv();
 	
 	/** General KV Shorthands **/
-	public String get(Object key);
-	public <U> U get(Object key, Class<U> valyeType);
-	public void set(Object key, Object value);
-	public void remove(Object key);
+	public String get(String key);	
+	public void set(String key, String value);
+	public void remove(String key);
 	
 	
 	
