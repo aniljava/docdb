@@ -3,6 +3,9 @@ package docdb;
 import java.io.Closeable;
 import java.util.Collection;
 
+/**
+ * This interface is of client's interest. It lists all the operations to be guaranteed by the underlying implementation.
+ */
 public interface DB extends Closeable{
 
 	/** Underlying KV Store **/

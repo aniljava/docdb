@@ -13,6 +13,12 @@ import java.util.UUID;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
+
+/**
+ * All common algorithms such as index, sets and lists are implemented here.
+ * So that that underlying engine only focuses on providing the basic
+ * operations defined in KV.java
+ */
 public class DocDB implements DB {
 
 	public KV	kv;
